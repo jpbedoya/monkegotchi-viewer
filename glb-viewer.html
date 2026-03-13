@@ -3,216 +3,264 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🐵 MonkeGotchi GLB Viewer</title>
+  <title>MonkeGotchi GLB Viewer</title>
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      background: #0f0f0f;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    :root {
+      --bg: #0f1115;
+      --panel: rgba(20, 24, 31, 0.92);
+      --line: rgba(255,255,255,0.12);
+      --text: #f5f7fb;
+      --muted: #9eabc0;
+      --accent: #4da3ff;
+      --accent-2: #8a5cff;
     }
-
-    h1 {
-      font-size: 1.4rem;
-      margin-bottom: 1rem;
-      opacity: 0.8;
-      letter-spacing: 0.05em;
-    }
-
-    #drop-zone {
-      width: 600px;
-      height: 600px;
-      border: 2px dashed #444;
-      border-radius: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 12px;
-      cursor: pointer;
-      transition: border-color 0.2s;
-      position: relative;
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      background: radial-gradient(circle at top, #1a2030 0%, #0f1115 60%);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-
-    #drop-zone.drag-over {
-      border-color: #9f7aea;
-      background: rgba(159, 122, 234, 0.05);
+    #app {
+      position: relative;
+      width: 100%;
+      height: 100%;
     }
-
-    #drop-zone p {
-      color: #888;
-      font-size: 0.95rem;
-    }
-
-    #drop-zone .icon {
-      font-size: 3rem;
-    }
-
-    #file-input {
-      display: none;
-    }
-
     model-viewer {
       width: 100%;
       height: 100%;
-      border-radius: 14px;
-      background: transparent;
-      --progress-bar-color: #9f7aea;
+      background: linear-gradient(180deg, #111722 0%, #0b0e14 100%);
+      --progress-bar-color: var(--accent);
+      --poster-color: transparent;
     }
-
-    #controls {
-      margin-top: 1rem;
+    .panel {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      right: 16px;
       display: flex;
-      gap: 12px;
+      flex-wrap: wrap;
+      gap: 10px;
       align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.28);
     }
-
-    button {
-      background: #1e1e1e;
-      border: 1px solid #333;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 8px;
+    .title {
+      font-weight: 700;
+      margin-right: 8px;
+    }
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    button, select, .file-label {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: #171c26;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 14px;
       cursor: pointer;
-      font-size: 0.85rem;
-      transition: background 0.2s;
     }
-
-    button:hover {
-      background: #2a2a2a;
+    button:hover, select:hover, .file-label:hover { border-color: rgba(255,255,255,0.24); }
+    button.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border: none;
     }
-
-    #filename {
-      color: #666;
-      font-size: 0.8rem;
+    .file-label input { display: none; }
+    .spacer { flex: 1 1 auto; }
+    .dropzone {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: rgba(10, 14, 22, 0.78);
+      border: 3px dashed rgba(255,255,255,0.28);
+      color: white;
+      z-index: 20;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
-
-    #upload-btn {
-      border-color: #9f7aea;
-      color: #9f7aea;
+    .dropzone.show { display: grid; }
+    .status {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      max-width: min(680px, calc(100% - 32px));
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(8, 11, 18, 0.8);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    @media (max-width: 700px) {
+      .panel { gap: 8px; }
+      .title { width: 100%; }
+      .spacer { display: none; }
     }
   </style>
 </head>
 <body>
+  <div id="app">
+    <div class="panel">
+      <div>
+        <div class="title">MonkeGotchi GLB Viewer</div>
+        <div class="muted">Orbit, zoom, drag & drop, upload, and built-in Monke samples.</div>
+      </div>
 
-  <h1>🐵 MonkeGotchi GLB Viewer</h1>
+      <select id="sampleSelect" title="Pick a bundled model">
+        <option value="monke4607.glb">Monke4607 — Sombrero</option>
+        <option value="monke1012.glb">Monke1012 — Beige Smoking + White Headset</option>
+      </select>
 
-  <div id="drop-zone">
-    <div class="icon">🐒</div>
-    <p>Loading Monke4607...</p>
-    <input type="file" id="file-input" accept=".glb,.gltf" style="display:none" />
-  </div>
+      <button id="loadSampleBtn" class="primary">Load sample</button>
+      <label class="file-label">Upload GLB<input id="fileInput" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" /></label>
+      <button id="toggleRotateBtn">Pause spin</button>
+      <button id="resetCameraBtn">Reset camera</button>
+      <div class="spacer"></div>
+      <span class="pill">model-viewer 3.5.0</span>
+    </div>
 
-  <div id="controls">
-    <button id="upload-btn" onclick="document.getElementById('file-input').click()">📂 Load File</button>
-    <button onclick="toggleAuto()">🔄 Auto-rotate</button>
-    <button onclick="resetCamera()">🎯 Reset View</button>
-    <span id="filename"></span>
+    <model-viewer
+      id="viewer"
+      src="monke4607.glb"
+      camera-controls
+      touch-action="pan-y"
+      autoplay
+      auto-rotate
+      shadow-intensity="1"
+      exposure="1"
+      environment-image="neutral"
+      camera-orbit="0deg 75deg 105%"
+      min-camera-orbit="auto auto 40%"
+      max-camera-orbit="auto auto 300%"
+      field-of-view="30deg"
+      interaction-prompt="auto"
+      loading="eager"
+      ar-status="not-presenting">
+    </model-viewer>
+
+    <div id="dropzone" class="dropzone">Drop GLB / GLTF here</div>
+    <div id="status" class="status">Loaded <strong>Monke4607</strong>. Try the dropdown to switch to Monke1012.</div>
   </div>
 
   <script>
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
-    const filenameEl = document.getElementById('filename');
-    let viewer = null;
-    let autoRotate = true;
+    const viewer = document.getElementById('viewer');
+    const status = document.getElementById('status');
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const sampleSelect = document.getElementById('sampleSelect');
+    const loadSampleBtn = document.getElementById('loadSampleBtn');
+    const toggleRotateBtn = document.getElementById('toggleRotateBtn');
+    const resetCameraBtn = document.getElementById('resetCameraBtn');
 
-    // Auto-load the monke file
-    function loadFromURL(url, name) {
-      filenameEl.textContent = name;
-      if (viewer) viewer.remove();
-      viewer = document.createElement('model-viewer');
-      viewer.setAttribute('src', url);
-      viewer.setAttribute('auto-rotate', '');
-      viewer.setAttribute('camera-controls', '');
-      viewer.setAttribute('shadow-intensity', '1');
-      viewer.setAttribute('environment-image', 'neutral');
-      viewer.setAttribute('exposure', '1');
-      viewer.setAttribute('alt', name);
-      viewer.style.width = '100%';
-      viewer.style.height = '100%';
-      dropZone.innerHTML = '';
-      dropZone.style.border = 'none';
-      dropZone.style.cursor = 'default';
-      dropZone.onclick = null;
-      dropZone.appendChild(viewer);
+    let objectUrl = null;
+    let rotating = true;
+
+    const prettyNames = {
+      'monke4607.glb': 'Monke4607 — Sombrero',
+      'monke1012.glb': 'Monke1012 — Beige Smoking + White Headset'
+    };
+
+    function revokeIfNeeded() {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+        objectUrl = null;
+      }
     }
 
-    // Load Monke4607 automatically
-    loadFromURL('monke4607.glb', 'Monke4607 - Solana Sombrero');
-
-    function loadGLB(file) {
-      const url = URL.createObjectURL(file);
-      filenameEl.textContent = file.name;
-
-      // Remove existing viewer
-      if (viewer) viewer.remove();
-
-      viewer = document.createElement('model-viewer');
-      viewer.setAttribute('src', url);
-      viewer.setAttribute('auto-rotate', '');
-      viewer.setAttribute('camera-controls', '');
-      viewer.setAttribute('shadow-intensity', '1');
-      viewer.setAttribute('environment-image', 'neutral');
-      viewer.setAttribute('exposure', '1');
-      viewer.setAttribute('alt', 'SMB 3D model');
-      viewer.style.width = '100%';
-      viewer.style.height = '100%';
-
-      // Clear drop zone and add viewer
-      dropZone.innerHTML = '';
-      dropZone.style.border = 'none';
-      dropZone.style.cursor = 'default';
-      dropZone.onclick = null;
-      dropZone.appendChild(viewer);
+    function setStatus(html) {
+      status.innerHTML = html;
     }
 
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files[0]) loadGLB(e.target.files[0]);
-    });
+    function loadModel(src, label, details = '') {
+      viewer.src = src;
+      setStatus(`Loaded <strong>${label}</strong>${details ? ` — ${details}` : ''}`);
+    }
 
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      dropZone.classList.add('drag-over');
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-      dropZone.classList.remove('drag-over');
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (file && (file.name.endsWith('.glb') || file.name.endsWith('.gltf'))) {
-        loadGLB(file);
-      }
-    });
-
-    function toggleAuto() {
-      if (!viewer) return;
-      autoRotate = !autoRotate;
-      if (autoRotate) {
-        viewer.setAttribute('auto-rotate', '');
-      } else {
-        viewer.removeAttribute('auto-rotate');
-      }
+    function loadFile(file) {
+      if (!file) return;
+      revokeIfNeeded();
+      objectUrl = URL.createObjectURL(file);
+      loadModel(objectUrl, file.name, `${Math.round(file.size / 1024)} KB local file`);
     }
 
     function resetCamera() {
-      if (!viewer) return;
-      viewer.cameraOrbit = 'auto auto auto';
-      viewer.resetTurntableRotation();
+      viewer.cameraOrbit = '0deg 75deg 105%';
+      viewer.jumpCameraToGoal();
     }
-  </script>
 
+    loadSampleBtn.addEventListener('click', () => {
+      const value = sampleSelect.value;
+      loadModel(value, prettyNames[value] || value, 'bundled sample');
+      resetCamera();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      loadFile(e.target.files?.[0]);
+      resetCamera();
+    });
+
+    toggleRotateBtn.addEventListener('click', () => {
+      rotating = !rotating;
+      if (rotating) {
+        viewer.setAttribute('auto-rotate', '');
+        toggleRotateBtn.textContent = 'Pause spin';
+      } else {
+        viewer.removeAttribute('auto-rotate');
+        toggleRotateBtn.textContent = 'Resume spin';
+      }
+    });
+
+    resetCameraBtn.addEventListener('click', resetCamera);
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      window.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('show');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+      window.addEventListener(evt, (e) => {
+        e.preventDefault();
+        if (evt === 'drop') {
+          const file = [...(e.dataTransfer?.files || [])].find(f => /\.(glb|gltf)$/i.test(f.name));
+          if (file) {
+            loadFile(file);
+            resetCamera();
+          }
+        }
+        dropzone.classList.remove('show');
+      });
+    });
+
+    window.addEventListener('beforeunload', revokeIfNeeded);
+  </script>
 </body>
 </html>
